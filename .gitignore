@@ -1,2 +1,2 @@
-state-and-locks/.terraform
+*.terraform
 *.tfstate*
