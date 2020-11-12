@@ -64,8 +64,7 @@ data "aws_iam_policy_document" "terraform_locks" {
     ]
 
     resources = [
-      "arn:aws:s3:::imagebuilder-terraform-state",
-      "arn:aws:s3:::imagebuilder-terraform-state/*"
+      "arn:aws:dynamodb:*:*:table/imagebuilder-terraform-locks",
     ]
   }
 }
