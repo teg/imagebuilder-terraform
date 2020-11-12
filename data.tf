@@ -3,20 +3,9 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-# Find the details for the internal VPC at AWS.
-data "aws_vpc" "internal_vpc" {
-  filter {
-    name = "tag:Name"
-    values = [
-      "RD-Platform-Prod-US-East-1"
-    ]
-  }
-}
-
-# Find all of the subnet IDs from the internal VPC.
-data "aws_subnet_ids" "internal_subnets" {
-  vpc_id = data.aws_vpc.internal_vpc.id
-}
+##############################################################################
+# EC2
+##############################################################################
 
 # Get the latest non-beta RHEL 8 image in AWS provided by Cloud Access.
 data "aws_ami" "rhel8_latest" {
@@ -41,4 +30,61 @@ data "aws_ami" "rhel8_latest" {
     name   = "virtualization-type"
     values = ["hvm"]
   }
+}
+
+##############################################################################
+# IAM
+##############################################################################
+
+# Get the policy from IAM that allows reading everything.
+data "aws_iam_policy" "viewonly" {
+  arn = "arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"
+}
+
+data "aws_iam_policy_document" "terraform_read_state" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      "arn:aws:s3:::imagebuilder-terraform-state",
+      "arn:aws:s3:::imagebuilder-terraform-state/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "terraform_locks" {
+  statement {
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem"
+    ]
+
+    resources = [
+      "arn:aws:s3:::imagebuilder-terraform-state",
+      "arn:aws:s3:::imagebuilder-terraform-state/*"
+    ]
+  }
+}
+
+##############################################################################
+# VPC
+##############################################################################
+
+# Find the details for the internal VPC at AWS.
+data "aws_vpc" "internal_vpc" {
+  filter {
+    name = "tag:Name"
+    values = [
+      "RD-Platform-Prod-US-East-1"
+    ]
+  }
+}
+
+# Find all of the subnet IDs from the internal VPC.
+data "aws_subnet_ids" "internal_subnets" {
+  vpc_id = data.aws_vpc.internal_vpc.id
 }
